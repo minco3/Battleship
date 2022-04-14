@@ -47,29 +47,24 @@ void placeShipRandom(PlayerBoard &board, int index);
 void getValidShipInfo(Point &point, char &orientation, PlayerBoard &board, int index);
 void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index);
 void computerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index);
-void fire(PlayerBoard &targetPlayer, Point targetPoint);
+void fire(PlayerBoard (&players)[PLAYER_COUNT], int target, int attacker, Point targetPoint);
 bool spaceOccupied(PlayerBoard board, Point point, int index, char orientation);
-bool spaceOccupied(PlayerBoard board, Point point);
+bool firedAt(PlayerBoard player, Point point);
+bool killed(PlayerBoard player, Point point);
 bool validPlacement(PlayerBoard board, Point point, int index, char orientation);
-bool lastAlive(PlayerBoard (&players)[PLAYER_COUNT]);
+pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]);
+int lastAlive(PlayerBoard (&players)[PLAYER_COUNT]);
 int genRandom(int a, int b);
+Point mostProbable(PlayerBoard targetPlayer);
 
 int main() {
     PlayerBoard players[2];
     boardSetup(players);
+    pair<int,int> winner = game(players);
+    cout << players[winner.first].name << " won the game in " << winner.second << " turns!\n";
     displayBoards(players);
-    do {
-        for (int i=0; i<PLAYER_COUNT; i++) {
-            if (players[i].isHuman) {
-                playerTurn(players, i);
-            } else {
-                playerTurn(players, i);
-            }
-        }
-    } while (!lastAlive(players));
     return 0;
 }
-
 
 void displayBoards(PlayerBoard players[PLAYER_COUNT]) {
     for (int a=0; a<PLAYER_COUNT; a++) {
@@ -178,7 +173,7 @@ void displayBoard(PlayerBoard player) {
             if (y==BOARD_HEIGHT) break;
             cout << char(y + 'A') << " | ";
             for (int x = 0; x < BOARD_WIDTH; x++)
-                cout << (isalpha(player.board[x][y]) ? player.board[x][y] : ' ') << " | ";
+                cout << ((isalpha(player.board[x][y])&&player.board[x][y]!='S') ? player.board[x][y] : ' ') << " | ";
             cout << '\n';
     }
 }
@@ -209,7 +204,6 @@ void boardSetup(PlayerBoard (&players)[PLAYER_COUNT]) {
     for (int x = 0; x < PLAYER_COUNT; x++)
         initFleet(players[x]);
     modeSelect(players);
-    displayBoards(players);
     for (int h=0; h<PLAYER_COUNT; h++)
         if (players[h].isHuman) {
             for (int i=0; i<FLEET_SIZE; i++) {
@@ -353,32 +347,34 @@ void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index) {
             cout << "ERROR: invalid coordinate.\n";
             cin.sync();
         }
-        if (players[target].board[x][y]=='X'||players[target].board[x][y]=='O') {
+        if (firedAt(players[target],Point(x,y))) {
             cout << "ERROR: target has already been fired at.\n";
         }
-    } while (players[target].board[x][y]=='X'||players[target].board[x][y]=='O');
+    } while (firedAt(players[target],Point(x,y)));
 
-    fire(players[target], Point(x,y));
+    fire(players, target, index, Point(x,y));
 }
 void computerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index) {
-
+    int target=index?0:1;
+    fire(players, target, index, mostProbable(players[target]));
 }
-void fire(PlayerBoard &targetPlayer, Point targetPoint) {
-    if (targetPlayer.board[targetPoint.x][targetPoint.y]=='S') {
+void fire(PlayerBoard (&players)[PLAYER_COUNT], int target, int attacker, Point targetPoint) {
+    if (players[target].board[targetPoint.x][targetPoint.y]=='S') {
         int index;
         for (int i=0; i<FLEET_SIZE; i++) {
-            for (int j=0; j<targetPlayer.fleet[i].size; j++)
-                if (targetPlayer.fleet[i].points[j].x==targetPoint.x && targetPlayer.fleet[i].points[j].y==targetPoint.y)
+            for (int j=0; j<players[target].fleet[i].size; j++)
+                if (players[target].fleet[i].points[j].x==targetPoint.x && players[target].fleet[i].points[j].y==targetPoint.y)
                     index=i;
         }
 
-        if (++targetPlayer.fleet[index].hitcount==targetPlayer.fleet[index].size) {
-            targetPlayer.fleet[index].alive=false;
-            cout << "You hit and sunk " << targetPlayer.name << "\'s " << targetPlayer.fleet[index].name << "!\n";
-        } else cout << "You hit " << targetPlayer.name << "\'s ship!\n";
+        if (++players[target].fleet[index].hitcount==players[target].fleet[index].size) {
+            players[target].fleet[index].alive=false;
+            cout << players[attacker].name << " hit and sunk " << players[target].name << "\'s " << players[target].fleet[index].name << "!\n";
+        } else cout << players[attacker].name << " hit " << players[target].name << "\'s ship!\n";
 
-        targetPlayer.board[targetPoint.x][targetPoint.y]='X';
-    } else targetPlayer.board[targetPoint.x][targetPoint.y]='O';
+        players[target].board[targetPoint.x][targetPoint.y]='X';
+    } else if (players[target].board[targetPoint.x][targetPoint.y]=='X') {
+    } else players[target].board[targetPoint.x][targetPoint.y]='O';
 }
 bool spaceOccupied(PlayerBoard board, Point point, int index, char orientation) {
     for (int i=0; i<board.fleet[index].size; i++)
@@ -390,9 +386,17 @@ bool spaceOccupied(PlayerBoard board, Point point, int index, char orientation) 
 
     return false;
 }
-bool spaceOccupied(PlayerBoard board, Point point) {
-    if (isalnum(board.board[point.x][point.y]))
+bool firedAt(PlayerBoard player, Point point) {
+    if (player.board[point.x][point.y]=='X'||player.board[point.x][point.y]=='O')
         return true;
+    return false;
+}
+bool killed(PlayerBoard player, Point point) {
+    for (int a=0; a<FLEET_SIZE; a++)
+        if (!player.fleet[a].alive)
+            for (int b=0; b<player.fleet[a].size; b++)
+                if (player.fleet[a].points[b].x==point.x&&player.fleet[a].points[b].y==point.y)
+                    return true;
     return false;
 }
 bool validPlacement(PlayerBoard board, Point point, int index, char orientation) {
@@ -403,23 +407,135 @@ bool validPlacement(PlayerBoard board, Point point, int index, char orientation)
     }
     return true;
 }
-bool lastAlive(PlayerBoard (&players)[PLAYER_COUNT]) {
-    int numAlive=0;
+pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]) {
+    int winner, turns=0;
+    while (true) {
+        for (int i = 0; i < PLAYER_COUNT; i++) {
+            if (players[i].isHuman) {
+                displayBoard(players[i]);
+                playerTurn(players, i);
+            } else {
+                computerTurn(players, i);
+            }
+            winner = lastAlive(players);
+            if (winner!=-1) return {winner,++turns};
+        }
+        turns++;
+    }
+}
+int lastAlive(PlayerBoard (&players)[PLAYER_COUNT]) {
+    int numAlive=0, temp;
     for (int i=0; i<PLAYER_COUNT; i++) {
         bool alive=false;
         for (int j=0; j<FLEET_SIZE; j++) {
             if (players[i].fleet[j].alive)
                 alive=true;
         }
-        if (alive) numAlive++;
+        if (alive) {
+            numAlive++;
+            temp = i;
+        }
     }
     if (numAlive==1)
-        return true;
-    else return false;
+        return temp;
+    else return -1;
 }
 int genRandom(int a, int b) {
     random_device rd;
     mt19937 mt(rd());
     uniform_int_distribution<int> dist(a,b);
     return dist(mt);
+}
+Point mostProbable(PlayerBoard targetPlayer) {
+    
+    int hitCount=0, killedHitCount=0, shipLengths[FLEET_SIZE]{}, ships[BOARD_WIDTH][BOARD_HEIGHT]{};;
+    Point point(0,0);
+    
+    for (int x=0; x<BOARD_WIDTH; x++)
+        for (int y=0; y<BOARD_HEIGHT; y++)
+            if (targetPlayer.board[x][y] == 'X')
+                hitCount++;
+
+    for (int i=0; i<FLEET_SIZE; i++)
+        if (targetPlayer.fleet[i].alive)
+            shipLengths[i]=targetPlayer.fleet[i].size;
+        else
+            killedHitCount+=targetPlayer.fleet[i].size;
+
+    if (hitCount>killedHitCount) {
+        for (int x = 0; x < BOARD_WIDTH; x++)
+            for (int y = 0; y < BOARD_HEIGHT; y++)
+                if (targetPlayer.board[x][y] != 'O'&&!killed(targetPlayer, Point(x,y)))
+                    for (int i=0; i<FLEET_SIZE; i++)
+                        if (shipLengths[i] != 0) {
+                            //vertical
+                            bool valid=true, occupied=false, beenHit=false;
+                            if (y + shipLengths[i]-1>=BOARD_HEIGHT) valid=false;
+                            if (valid) {
+                                for (int j= 1; j<shipLengths[i]; j++)
+                                    if (targetPlayer.board[x][y+j] == 'O'||killed(targetPlayer, Point(x,y+j))) occupied=true;
+                                if (!occupied) {
+                                    for (int g = 0; g < shipLengths[i]; g++)
+                                        if (targetPlayer.board[x][y + g] == 'X') beenHit = true;
+                                    if (beenHit)
+                                        for (int h = 0; h < shipLengths[i]; h++)
+                                            ships[x][y + h]++;
+                                }
+                            }
+                            //horizontal
+                            valid=true, occupied=false, beenHit=false;
+                            if (x + shipLengths[i]-1>=BOARD_WIDTH) valid = false;
+                            if (valid) {
+                                for (int j=1; j<shipLengths[i]; j++)
+                                    if (targetPlayer.board[x+j][y] == 'O'||killed(targetPlayer, Point(x+j,y))) occupied = true;
+                                if (!occupied) {
+                                    for (int g = 0; g < shipLengths[i]; g++)
+                                        if (targetPlayer.board[x + g][y] == 'X') beenHit = true;
+                                    if (beenHit)
+                                        for (int h = 0; h < shipLengths[i]; h++)
+                                            ships[x + h][y]++;
+                                }
+                            }
+                        }
+
+        for (int x = 0; x < BOARD_WIDTH; x++)
+            for (int y = 0; y < BOARD_HEIGHT; y++)
+                if (ships[x][y] > ships[point.x][point.y]&&targetPlayer.board[x][y]!='X')
+                    point = Point(x, y);
+    } else {
+        for (int x = 0; x < BOARD_WIDTH; x++)
+            for (int y = 0; y < BOARD_HEIGHT; y++)
+                if (targetPlayer.board[x][y] != 'O' && targetPlayer.board[x][y] != 'X')
+                    for (int i = 0; i < FLEET_SIZE; i++)
+                        if (shipLengths[i] != 0) {
+                            //vertical
+                            bool valid = true, occupied = false;
+                            if (y + shipLengths[i] - 1 >= BOARD_HEIGHT) valid = false;
+                            if (valid) {
+                                for (int j = 0; j < shipLengths[i]; j++)
+                                    if (firedAt(targetPlayer, Point(x, y + j))) occupied = true;
+                                if (!occupied)
+                                    for (int h = 0; h < shipLengths[i]; h++)
+                                        ships[x][y + h]++;
+                            }
+                            //horizontal
+                            valid = true, occupied = false;
+                            if (x + shipLengths[i] - 1 >= BOARD_WIDTH) valid = false;
+                            if (valid) {
+                                for (int j = 0; j < shipLengths[i]; j++)
+                                    if (firedAt(targetPlayer, Point(x+j, y))) occupied = true;
+                                if (!occupied)
+                                    for (int h = 0; h < shipLengths[i]; h++)
+                                        ships[x + h][y]++;
+                            }
+                        }
+
+        for (int x = 0; x < BOARD_WIDTH; x++)
+            for (int y = 0; y < BOARD_HEIGHT; y++)
+                if (ships[x][y] > ships[point.x][point.y])
+                    point = Point(x, y);
+
+    }
+
+    return point;
 }
