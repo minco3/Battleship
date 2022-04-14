@@ -444,7 +444,7 @@ int modeSelect() {
     int mode;
     while (true) {
         cin.sync();
-        cout << "Would you like to play 2 player or vs. AI?\n1. 2 player\n2. vs. AI\n";
+        cout << "Would you like to play 2 player or vs. AI?\n1. 2 player\n2. vs. AI\n3. simulation mode (AI vs AI)\n";
         cin >> mode;
         if (mode>0&&mode<4)
             break;
