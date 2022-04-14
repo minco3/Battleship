@@ -37,32 +37,81 @@ struct PlayerBoard {
 };
 
 void displayBoards(PlayerBoard players[PLAYER_COUNT]);
-void displayBoards(PlayerBoard players[PLAYER_COUNT], int index);
 void displayBoard(PlayerBoard player);
+void displayEnemyBoard(PlayerBoard player);
 void initFleet(PlayerBoard &board);
+void playerSetup(PlayerBoard (&players)[PLAYER_COUNT], int mode);
 void boardSetup(PlayerBoard (&players)[PLAYER_COUNT]);
-void modeSelect(PlayerBoard (&players)[PLAYER_COUNT]);
 void placeShip(PlayerBoard &board, int index);
 void placeShipRandom(PlayerBoard &board, int index);
 void getValidShipInfo(Point &point, char &orientation, PlayerBoard &board, int index);
 void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index);
 void computerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index);
 void fire(PlayerBoard (&players)[PLAYER_COUNT], int target, int attacker, Point targetPoint);
+void clearConsole();
 bool spaceOccupied(PlayerBoard board, Point point, int index, char orientation);
 bool firedAt(PlayerBoard player, Point point);
 bool killed(PlayerBoard player, Point point);
 bool validPlacement(PlayerBoard board, Point point, int index, char orientation);
 pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]);
+int modeSelect();
 int lastAlive(PlayerBoard (&players)[PLAYER_COUNT]);
 int genRandom(int a, int b);
 Point mostProbable(PlayerBoard targetPlayer);
 
 int main() {
-    PlayerBoard players[2];
-    boardSetup(players);
-    pair<int,int> winner = game(players);
-    cout << players[winner.first].name << " won the game in " << winner.second << " turns!\n";
-    displayBoards(players);
+
+    int mode = modeSelect();
+
+    if (mode!=3) {
+        PlayerBoard players[2];
+        for (int x=0; x<PLAYER_COUNT; x++)
+            players[x].name="Player "+to_string(x+1);
+        playerSetup(players, mode);
+        boardSetup(players);
+        pair<int,int> winner = game(players);
+        cout << players[winner.first].name << " won the game in " << winner.second << " turns!\n";
+        displayBoards(players);
+    } else { // simulate ai mode
+        int times;
+        vector<int> turns;
+        cout << "How many games would you like to simulate the game?\n";
+        cin >> times;
+        char ans;
+        cout << "Would you like to see each winning board?\n";
+        cin >> ans;
+        if (isupper(ans)) ans=tolower(ans);
+
+        for (int i=0; i<times; i++) {
+            PlayerBoard players[2];
+            for (int x=0; x<PLAYER_COUNT; x++)
+                players[x].name="Player "+to_string(x);
+            playerSetup(players, mode);
+            boardSetup(players);
+            pair<int,int> winner = game(players);
+            turns.push_back(winner.second);
+            if (ans=='y') {
+                cout<<"Board " << i << '/' << times << ":\n";
+                displayBoards(players);
+            }
+            else if (i==times-1) {
+                clearConsole();
+                cout << "The last board: \n";
+                displayBoards(players);
+            }
+        }
+        int  average=0, min=turns[0], max=turns[0];
+        for (int i=0; i<turns.size(); i++) {
+            average+=turns[i];
+            if (turns[i]<min)
+                min=turns[i];
+            if (turns[i]>max)
+                max=turns[i];
+        }
+        cout << "Simulation complete!\n"
+             << "After " << times << " iterations the winning computer took on average " << (double)average/turns.size() << "turns to win the game!\n"
+             << "The fastest game took " << min << " turns and the longest game took " << max << " turns.\n";
+    }
     return 0;
 }
 
@@ -108,52 +157,6 @@ void displayBoards(PlayerBoard players[PLAYER_COUNT]) {
         }
     }
 }
-void displayBoards(PlayerBoard players[PLAYER_COUNT], int index) {
-    for (int a=0; a<PLAYER_COUNT; a++) {
-        string name = players[a].name+" Board";
-        cout << setw((BOARD_WIDTH*4+4-name.length())/2) << ' ' << name
-             << setw(((BOARD_WIDTH*4+4-name.length()))-((BOARD_WIDTH*4+4-name.length())/2)) << ' ';
-        if (a!=PLAYER_COUNT-1)
-            cout << setw(BOARD_OFFSET) << ' ';
-        else cout << '\n';
-    }
-    for (int a=0; a<PLAYER_COUNT; a++) {
-        for (int x = 0; x <= BOARD_WIDTH; x++) // first row
-            if (x == 0)
-                cout << ' ';
-            else
-                cout << setw(4) << x;
-
-        if (a!=PLAYER_COUNT-1)
-            cout << setw(BOARD_OFFSET+3) << ' ';
-        else cout << '\n';
-    }
-    for (int y = 0; y <=BOARD_HEIGHT; y++) {
-        for (int a=0; a<PLAYER_COUNT; a++) {
-            cout << setw(2) << ' ';
-            string line(BOARD_WIDTH * 4 + 1, '-');
-            cout << line;
-
-            if (a!=PLAYER_COUNT-1)
-                cout << setw(BOARD_OFFSET+1) << ' ';
-            else cout << '\n';
-        }
-        for (int a=0; a<PLAYER_COUNT; a++) {
-            if (y==BOARD_HEIGHT) break;
-            cout << char(y + 'A') << " | ";
-            for (int x = 0; x < BOARD_WIDTH; x++) {
-                char c;
-                if (a == index) c=isalpha(players[a].board[x][y]) ? players[a].board[x][y]: ' ';
-                else c=(isalpha(players[a].board[x][y])&&players[a].board[x][y]!='S') ? players[a].board[x][y] : ' ';
-                cout << c << " | ";
-            }
-
-            if (a!=PLAYER_COUNT-1)
-                cout << setw(BOARD_OFFSET) << ' ';
-            else cout << '\n';
-        }
-    }
-}
 void displayBoard(PlayerBoard player) {
     string name = "Your Board";
     cout << setw((BOARD_WIDTH*4+4-name.length())/2) << ' ' << name
@@ -173,8 +176,31 @@ void displayBoard(PlayerBoard player) {
             if (y==BOARD_HEIGHT) break;
             cout << char(y + 'A') << " | ";
             for (int x = 0; x < BOARD_WIDTH; x++)
-                cout << ((isalpha(player.board[x][y])&&player.board[x][y]!='S') ? player.board[x][y] : ' ') << " | ";
+                cout << (isalpha(player.board[x][y]) ? player.board[x][y] : ' ') << " | ";
             cout << '\n';
+    }
+}
+void displayEnemyBoard(PlayerBoard player) {
+    string name = "Enemy Board";
+    cout << setw((BOARD_WIDTH*4+4-name.length())/2) << ' ' << name
+         << setw(((BOARD_WIDTH*4+4-name.length()))-((BOARD_WIDTH*4+4-name.length())/2)) << ' ' << '\n';
+    for (int x = 0; x <= BOARD_WIDTH; x++) // first row
+        if (x == 0)
+            cout << ' ';
+        else
+            cout << setw(4) << x;
+    cout << '\n';
+    for (int y = 0; y <=BOARD_HEIGHT; y++) {
+
+        cout << setw(2) << ' ';
+        string line(BOARD_WIDTH * 4 + 1, '-');
+        cout << line << '\n';
+
+        if (y==BOARD_HEIGHT) break;
+        cout << char(y + 'A') << " | ";
+        for (int x = 0; x < BOARD_WIDTH; x++)
+            cout << ((isalpha(player.board[x][y])&&player.board[x][y]!='S') ? player.board[x][y] : ' ') << " | ";
+        cout << '\n';
     }
 }
 void initFleet(PlayerBoard &board) {
@@ -200,10 +226,21 @@ void initFleet(PlayerBoard &board) {
     }
     stream.close();
 }
+void playerSetup(PlayerBoard (&players)[PLAYER_COUNT], int mode) {
+    if (mode == 2) {
+        players[1].isHuman=false;
+        players[1].name+=" (Computer)";
+    }
+    if (mode == 3) {
+        players[0].isHuman=false;
+        players[0].name+=" (Computer)";
+        players[1].isHuman=false;
+        players[1].name+=" (Computer)";
+    }
+}
 void boardSetup(PlayerBoard (&players)[PLAYER_COUNT]) {
     for (int x = 0; x < PLAYER_COUNT; x++)
         initFleet(players[x]);
-    modeSelect(players);
     for (int h=0; h<PLAYER_COUNT; h++)
         if (players[h].isHuman) {
             for (int i=0; i<FLEET_SIZE; i++) {
@@ -219,29 +256,6 @@ void boardSetup(PlayerBoard (&players)[PLAYER_COUNT]) {
                     players[h].board[players[h].fleet[i].points[j].x][players[h].fleet[i].points[j].y] = 'S';
             }
         }
-}
-void modeSelect(PlayerBoard (&players)[PLAYER_COUNT]) {
-    int mode;
-    while (true) {
-        cout << "Would you like to play 2 player or vs. AI?\n1. 2 player\n2. vs. AI\n";
-        cin >> mode;
-        if (mode==1 || mode==2 || mode==3)
-            break;
-        cout << "ERROR: invalid mode.\n";
-    }
-    if (mode==1) {
-        players[0].name = "Player 1";
-        players[1].name = "Player 2";
-    } else if (mode==2) {
-        players[0].name = "Player 1";
-        players[1].name = "Player 2 (Computer)";
-        players[1].isHuman = false;
-    } else {
-        players[0].name = "Player 1 (Computer)";
-        players[1].name = "Player 2 (Computer)";
-        players[0].isHuman=false;
-        players[1].isHuman=false;
-    }
 }
 void placeShip(PlayerBoard &board, int index) {
     char orientation;
@@ -325,7 +339,7 @@ void getValidShipInfo(Point &point, char &orientation, PlayerBoard &board, int i
 void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index) {
     int x, target=index?0:1;
     char y;
-    displayBoards(players, index);
+    displayEnemyBoard(players[target]);
     do {
         while (true) {
             cout << "Please input a vertical coordinate to fire at (A-" << char(BOARD_HEIGHT+'A'-1) << ") :\n";
@@ -376,6 +390,9 @@ void fire(PlayerBoard (&players)[PLAYER_COUNT], int target, int attacker, Point 
     } else if (players[target].board[targetPoint.x][targetPoint.y]=='X') {
     } else players[target].board[targetPoint.x][targetPoint.y]='O';
 }
+void clearConsole() {
+    cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+}
 bool spaceOccupied(PlayerBoard board, Point point, int index, char orientation) {
     for (int i=0; i<board.fleet[index].size; i++)
         if (orientation=='h') {
@@ -422,6 +439,18 @@ pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]) {
         }
         turns++;
     }
+}
+int modeSelect() {
+    int mode;
+    while (true) {
+        cin.sync();
+        cout << "Would you like to play 2 player or vs. AI?\n1. 2 player\n2. vs. AI\n";
+        cin >> mode;
+        if (mode>0&&mode<4)
+            break;
+        cout << "ERROR: invalid mode.\n";
+    }
+    return mode;
 }
 int lastAlive(PlayerBoard (&players)[PLAYER_COUNT]) {
     int numAlive=0, temp;
