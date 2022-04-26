@@ -1,17 +1,6 @@
 # ninja log v5
-3	1243	6716680184438168	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1243	1404	6716680186058533	battleship.exe	dfd02965235403ef
-2	1118	6716688348941631	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1118	1263	6716688350371961	battleship.exe	dfd02965235403ef
-2	1143	6716688664744573	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1143	1349	6716688666805048	battleship.exe	dfd02965235403ef
-2	1175	6716689051026234	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1175	1304	6716689052306520	battleship.exe	dfd02965235403ef
-3	1088	6716690812928088	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1088	1260	6716690814628469	battleship.exe	dfd02965235403ef
-3	1047	6716692104827167	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1048	1199	6716692106407530	battleship.exe	dfd02965235403ef
-3	1250	6716696373004748	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-1250	1448	6716696374575098	battleship.exe	dfd02965235403ef
-5	2137	6716743268778573	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
-2138	2535	6716743272738061	battleship.exe	dfd02965235403ef
+2	1089	6727044928155788	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
+1089	1221	6727044929486087	battleship.exe	dfd02965235403ef
+2	842	6727057868468263	CMakeFiles/battleship.dir/main.cpp.obj	b1ab1849ec587cd5
+10	899	6727057869058392	CMakeFiles/battleship.dir/battleship.cpp.obj	e3800d17eaab64d7
+899	1026	6727057870308681	battleship.exe	a5796fd544309b55
