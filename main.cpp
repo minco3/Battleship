@@ -22,10 +22,7 @@ struct Ship {
     vector<Point> points;
     bool alive=true;
 
-    Ship(string str, int num) {
-        name = str;
-        size = num;
-    }
+    Ship(string str, int num) : name(str), size(num) {}
     Ship() {}
 };
 
@@ -380,7 +377,7 @@ void fire(PlayerBoard (&players)[PLAYER_COUNT], int target, int attacker, Point 
                 if (players[target].fleet[i].points[j].x==targetPoint.x && players[target].fleet[i].points[j].y==targetPoint.y)
                     index=i;
         }
-
+        clearConsole();
         if (++players[target].fleet[index].hitcount==players[target].fleet[index].size) {
             players[target].fleet[index].alive=false;
             cout << players[attacker].name << " hit and sunk " << players[target].name << "\'s " << players[target].fleet[index].name << "!\n";
@@ -429,7 +426,6 @@ pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]) {
     while (true) {
         for (int i = 0; i < PLAYER_COUNT; i++) {
             if (players[i].isHuman) {
-                displayBoard(players[i]);
                 playerTurn(players, i);
             } else {
                 computerTurn(players, i);
