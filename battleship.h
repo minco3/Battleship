@@ -35,14 +35,20 @@ public:
     bool isHuman=true;
 
     void display();
-    void displayAsEnemy();
-    void placeShip(int index);
+    void displayProbability();
+    void placeShip(int index, Point point={-1,-1}, char orientation='a');
     void placeShipRandom(int index);
+    void placeOnBoard(int index, Point point, char orientation);
     void getValidShipInfo(Point &point, char &orientation, int index);
-    bool spaceOccupied(Point point, int index, char orientation);
+    bool isOccupied(Point point, int index, char orientation);
     bool isFiredAt(Point point);
-    bool isDead(Point point);
+    bool isDead(Point point, int size=1, char orientation='h');
+    bool beenHit(Point point, int size, char orientation);
+    bool occupied(Point point, int size, char orientation);
     bool validPlacement(Point point, int index, char orientation);
+    bool valid (Point point, int size, char orientation);
+    bool isHuntable(Point point, int size, char orientation);
+    bool isSearchable(Point point, int size, char orientation);
     Point mostProbable();
 };
 
