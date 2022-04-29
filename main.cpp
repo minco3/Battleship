@@ -8,8 +8,8 @@ using namespace std;
 static const string SHIP_INFO_PATH = "ships.txt";
 bool logging = true;
 
-void displayBoards(PlayerBoard players[PLAYER_COUNT]);
-PlayerBoard initFleet();
+PlayerBoard initFleet(); //
+void displayBoards(PlayerBoard players[PLAYER_COUNT]); //
 void playerSetup(PlayerBoard (&players)[PLAYER_COUNT], int mode);
 void boardSetup(PlayerBoard (&players)[PLAYER_COUNT]);
 void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index);
@@ -20,13 +20,12 @@ pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]);
 int modeSelect();
 int lastAlive(PlayerBoard (&players)[PLAYER_COUNT]);
 void simulate();
-void test();
 
 int main() {
 
     int mode = modeSelect();
 
-    if (mode<3) {
+    if (mode!=3) {
         PlayerBoard players[2], temp=initFleet();
         for (int x=0; x<PLAYER_COUNT; x++)
             players[x]=temp;
@@ -38,11 +37,8 @@ int main() {
         clearConsole();
         pair<int,int> winner = game(players);
         cout << players[winner.first].name << " won the game in " << winner.second << " turns!\n";
-    } else if (mode==3) { // simulate ai mode
+    } else if (mode==3) // simulate ai mode
         simulate();
-    } else {
-        test();
-    }
     return 0;
 }
 
@@ -80,8 +76,7 @@ void displayBoards(PlayerBoard players[PLAYER_COUNT]) {
             if (y==BOARD_HEIGHT) break;
             cout << char(y + 'A') << " | ";
             for (int x = 0; x < BOARD_WIDTH; x++)
-                cout << (isalpha(players[a].board[x][y]) ? players[a].board[x][y]: ' ') << " | ";
-//                cout << (isalpha(players[a].board[x][y])&&players[a].board[x][y]!='S' ? players[a].board[x][y]: ' ') << " | ";
+                cout << (isalpha(players[a].board[x][y])&&players[a].board[x][y]!='S' ? players[a].board[x][y]: ' ') << " | ";
 
             if (a!=PLAYER_COUNT-1)
                 cout << setw(BOARD_OFFSET) << ' ';
@@ -220,15 +215,6 @@ pair<int,int> game(PlayerBoard (&players)[PLAYER_COUNT]) {
             winner = lastAlive(players);
             if (winner!=-1) return {winner,++turns};
         }
-        if (turns>100) {
-            cout << "\ncomputer couldn't find right move\n";
-            displayBoards(players);
-            players[0].displayProbability();
-            players[1].displayProbability();
-            cout << "\n 0,0 isHuntable: " << players[0].isHuntable({0,0},3,'v') << '\n';
-            cout << "\n 0,0 isDead: " << players[0].isDead({0,0},3,'v') << '\n';
-            exit(2);
-        }
         turns++;
     }
 }
@@ -238,7 +224,7 @@ int modeSelect() {
         cin.sync();
         cout << "Would you like to play 2 player or vs. AI?\n1. 2 player\n2. vs. AI\n3. simulation mode (AI vs AI)\n";
         cin >> mode;
-        if (mode>0&&mode<5)
+        if (mode>0&&mode<4)
             break;
         cout << "ERROR: invalid mode.\n";
     }
@@ -298,24 +284,4 @@ void simulate() {
         cout << "\rSimulation complete!                \n"
              << "After " << times << " iterations the winning computer took on average " << (double)average/turns.size() << " turns to win the game!\n"
              << "The fastest game took " << min << " turns and the longest game took " << max << " turns.\n";
-}
-
-void test() {
-    PlayerBoard players[2], temp=initFleet();
-    for (int x=0; x<PLAYER_COUNT; x++)
-        players[x]=temp;
-
-    playerSetup(players, 3);
-    for (int x=0; x<PLAYER_COUNT; x++) {
-        players[x].placeShip(0,{1,2},'h');
-        players[x].placeShip(1,{2,0},'h');
-        players[x].placeShip(2, {0,0},'v');
-        players[x].placeShip(3, {9,2}, 'v');
-        players[x].placeShip(4, {1,5}, 'v');
-    }
-    pair<int,int> winner = game(players);
-    displayBoards(players);
-    cout << "\n 0,0 isHuntable: " << players[0].isHuntable({0,0},3,'v') << '\n';
-    cout << "\n 0,0 isDead: " << players[0].isDead({0,0},3,'v') << '\n';
-    players[0].displayProbability();
 }

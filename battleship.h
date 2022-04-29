@@ -35,7 +35,6 @@ public:
     bool isHuman=true;
 
     void display();
-    void displayProbability();
     void placeShip(int index, Point point={-1,-1}, char orientation='a');
     void placeShipRandom(int index);
     void placeOnBoard(int index, Point point, char orientation);
