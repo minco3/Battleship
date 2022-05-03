@@ -105,12 +105,17 @@ void PlayerBoard::getValidShipInfo(Point &point, char &orientation, int index) {
             if (validPlacement(point, index, orientation))
                 break;
             cout << "ERROR: invalid placement\n";
+            point = {-1,-1};
+            orientation = 'a';
         }
 
         occupied = isOccupied(point, index, orientation);
 
-        if (occupied)
+        if (occupied) {
             cout << "ERROR: space is occupied\n";
+            point = {-1,-1};
+            orientation = 'a';
+        }
 
     } while (occupied);
 
