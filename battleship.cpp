@@ -1,3 +1,7 @@
+/*
+I, Marco Miralles, do hereby certify that I have derived no assistance for this project or examination from any sources whatever, whether oral, written, or in print.
+This file has the definitions of all member functions
+*/
 #include "battleship.h"
 #include <random>
 

@@ -1,3 +1,7 @@
+/*
+I, Marco Miralles, do hereby certify that I have derived no assistance for this project or examination from any sources whatever, whether oral, written, or in print.
+This header holds all classes and structs and the declaration of the member function 
+*/
 #ifndef BATTLESHIP_BATTLESHIP_H
 #define BATTLESHIP_BATTLESHIP_H
 #include <iostream>
