@@ -162,6 +162,7 @@ void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index) {
                 break;
             cout << "ERROR: invalid coordinate.\n";
             cin.sync();
+            cin.ignore(10000,'\n');
         }
         while (true) {
             cout << "Please input a horizontal coordinate to fire at (1-" << BOARD_WIDTH << ") :\n";
@@ -171,6 +172,7 @@ void playerTurn(PlayerBoard (&players)[PLAYER_COUNT], int index) {
                 break;
             cout << "ERROR: invalid coordinate.\n";
             cin.sync();
+            cin.ignore(10000,'\n');
         }
         if (players[target].isFiredAt(Point(x, y))) {
             cout << "ERROR: target has already been fired at.\n";
@@ -235,6 +237,8 @@ int modeSelect() {
         if (mode>0&&mode<4)
             break;
         cout << "ERROR: invalid mode.\n";
+        cin.sync();
+        cin.ignore(10000,'\n');
     }
     return mode;
 }

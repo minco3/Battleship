@@ -67,29 +67,32 @@ void PlayerBoard::placeOnBoard(int index, Point point, char orientation) {
 }
 void PlayerBoard::getValidShipInfo(Point &point, char &orientation, int index) {
     bool occupied=false;
-    char y;
-    int x;
+
     cin.sync();
     do {
         while (true) {
             while (point.y<0||point.y>BOARD_HEIGHT) {
+                char y;
                 cout << "Please input a vertical coordinate to place your " << fleet[index].name << " at (A-" << char(BOARD_HEIGHT+'A'-1) << ") :\n";
                 cin >> y;
                 if (islower(y)) y=toupper(y);
                 y-='A';
                 if (y<0||y>BOARD_HEIGHT) {
-                    cout << "ERROR: invalid coordinate\n";
+                    cout << "ERROR: invalid vertical coordinate\n";
                     cin.sync();
+                    cin.ignore(10000,'\n');
                 }
                 else point.y=y;
             }
             while (point.x<0||point.x>BOARD_WIDTH) {
+                int x;
                 cout << "Please input a horizontal coordinate to place your " << fleet[index].name << " at (1-" << BOARD_WIDTH << ") :\n";
                 cin >> x;
                 x-=1;
                 if (x<0||x>=BOARD_WIDTH) {
-                    cout << "ERROR: invalid coordinate\n";
+                    cout << "ERROR: invalid horizontal coordinate\n";
                     cin.sync();
+                    cin.ignore(10000,'\n');
                 }
                 else point.x=x;
             }
@@ -99,6 +102,7 @@ void PlayerBoard::getValidShipInfo(Point &point, char &orientation, int index) {
                 if (orientation!='h'&&orientation!='v') {
                     cout << "ERROR: invalid orientation\n";
                     cin.sync();
+                    cin.ignore(10000,'\n');
                 }
             }
 
@@ -107,6 +111,8 @@ void PlayerBoard::getValidShipInfo(Point &point, char &orientation, int index) {
             cout << "ERROR: invalid placement\n";
             point = {-1,-1};
             orientation = 'a';
+            cin.sync();
+            cin.ignore(10000,'\n');
         }
 
         occupied = isOccupied(point, index, orientation);
@@ -115,6 +121,8 @@ void PlayerBoard::getValidShipInfo(Point &point, char &orientation, int index) {
             cout << "ERROR: space is occupied\n";
             point = {-1,-1};
             orientation = 'a';
+            cin.sync();
+            cin.ignore(10000,'\n');
         }
 
     } while (occupied);
