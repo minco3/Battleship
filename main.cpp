@@ -8,10 +8,11 @@ Output: board
 #include <vector>
 #include <iomanip>
 #include <fstream>
-#include "battleship.h"
+#include "includes/battleship/battleship.h"
 using namespace std;
 
 static const string SHIP_INFO_PATH = "ships.txt";
+
 bool logging = true;
 
 PlayerBoard initFleet(); //returns a temp player with the fleet from ships.txt
