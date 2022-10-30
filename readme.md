@@ -7,6 +7,7 @@
 - 1 player and simulation mode's AI uses a probability map to determine the best move
 - has a seek / hunt mode
 - the player is able to place their ships on the board with colision detection to make sure the ships are being placed correctly
+- by using the simulation mode I was able to test all edge cases that the AI would face and was able to optimize it so the average turns per game was around ~23
 
 ## What I Learned
 
